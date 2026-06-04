@@ -1,0 +1,59 @@
+agent:
+  name: "LaptopAI"
+  version: "1.0.0"
+  description: "Personal Agentic AI for Laptop Management"
+  owner: "Sunil Gentyala"
+
+llm:
+  provider: "ollama"          # ollama | anthropic | openai
+  model: "qwen2.5-coder:7b"  # best tool-calling accuracy locally
+  base_url: "http://localhost:11434"
+  temperature: 0.1
+  timeout: 60
+
+rag:
+  chroma_path: "./data/chroma_db"
+  collection_name: "laptop_knowledge"
+  embedding_model: "all-MiniLM-L6-v2"  # free, runs locally
+  chunk_size: 512
+  chunk_overlap: 64
+  top_k: 5
+
+mcp:
+  server_host: "localhost"
+  server_port: 8765
+  transport: "stdio"          # stdio | http
+
+security:
+  audit_log_path: "./logs/audit.jsonl"
+  max_file_size_mb: 100       # prevent agents writing huge files
+  allowed_paths:
+    - "C:\\Gitrepos"
+    - "C:\\Users\\Sunil\\Documents"
+    - "C:\\Users\\Sunil\\Desktop"
+  blocked_paths:
+    - "C:\\Windows\\System32"
+    - "C:\\Program Files"
+  allowed_commands:
+    - "git"
+    - "python"
+    - "pip"
+    - "npm"
+    - "node"
+    - "powershell"
+    - "Get-ChildItem"
+    - "Get-Process"
+    - "Get-Service"
+  require_approval_for:
+    - "rm"
+    - "Remove-Item"
+    - "Format-"
+    - "reg delete"
+  max_execution_time_sec: 30
+
+monitoring:
+  system_check_interval_sec: 300   # 5 minutes
+  log_retention_days: 30
+  alert_cpu_percent: 90
+  alert_memory_percent: 85
+  alert_disk_percent: 80
