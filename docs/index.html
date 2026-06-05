@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaptopAI-Agent — Private, Local Autonomous AI for Laptop Management</title>
+  <meta name="description" content="LaptopAI-Agent is a fully local, privacy-first autonomous AI agent for laptop management. LangGraph reasoning loop, Ollama local LLM, ChromaDB RAG, MCP server, SHA-256 chained audit log. Zero API keys. Zero cloud calls.">
+  <meta name="keywords" content="local AI agent, LangGraph, Ollama, ChromaDB, MCP, RAG, agentic AI, privacy, offline AI, Claude integration, laptop management">
+  <meta name="author" content="Sunil Gentyala">
+  <meta property="og:title" content="LaptopAI-Agent — Private Local Autonomous AI">
+  <meta property="og:description" content="Fully local autonomous AI for laptop management. LangGraph + Ollama + ChromaDB RAG + MCP. Zero API keys. Zero cloud calls. SHA-256 chained audit log.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sunilgentyala.github.io/LaptopAI-Agent/">
+  <meta property="og:image" content="https://opengraph.githubassets.com/1/sunilgentyala/LaptopAI-Agent">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LaptopAI-Agent — Private Local Autonomous AI">
+  <meta name="twitter:description" content="Zero API keys. Zero cloud. LangGraph + Ollama + ChromaDB + MCP. Your AI, your machine, your rules.">
+  <link rel="canonical" href="https://sunilgentyala.github.io/LaptopAI-Agent/">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #21262d;
+      --border-hover: #30363d;
+      --accent: #f0883e;
+      --accent2: #3fb950;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --blue: #58a6ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .nav-brand { font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+    .nav-brand sup { font-size: 0.55rem; color: var(--muted); font-weight: 400; letter-spacing: 0; vertical-align: super; }
+    .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; }
+    .nav-links a { color: var(--muted); transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-github {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.35rem 0.8rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.82rem; color: var(--text) !important;
+      transition: border-color 0.15s !important;
+    }
+    .nav-github:hover { border-color: var(--accent) !important; text-decoration: none !important; }
+
+    /* ── HERO ── */
+    .hero-wrap { position: relative; overflow: hidden; }
+    .hero-wrap::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(63,185,80,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(240,136,62,0.07) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .hero {
+      position: relative; text-align: center;
+      padding: 5.5rem 2rem 3.5rem;
+      max-width: 820px; margin: 0 auto;
+    }
+    .badge-row { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+    .badge { font-size: 0.7rem; padding: 0.2rem 0.65rem; border-radius: 999px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-orange { background: rgba(240,136,62,0.15); color: var(--accent);  border: 1px solid rgba(240,136,62,0.3); }
+    .badge-green  { background: rgba(63,185,80,0.12);  color: var(--green);   border: 1px solid rgba(63,185,80,0.25); }
+    .badge-blue   { background: rgba(88,166,255,0.12); color: var(--blue);    border: 1px solid rgba(88,166,255,0.25); }
+    .badge-purple { background: rgba(188,140,255,0.12);color: var(--purple);  border: 1px solid rgba(188,140,255,0.25); }
+
+    .hero h1 { font-size: clamp(2.4rem, 5.5vw, 3.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.08; margin-bottom: 1.25rem; }
+    .hero h1 span { color: var(--green); }
+    .hero-sub { font-size: 1.1rem; color: var(--muted); max-width: 600px; margin: 0 auto 2.25rem; line-height: 1.7; }
+    .btn-row { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.7rem 1.5rem; border-radius: 6px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #0d1117; box-shadow: 0 0 20px rgba(240,136,62,0.25); }
+    .btn-primary:hover { box-shadow: 0 0 32px rgba(240,136,62,0.4); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--border-hover); }
+
+    /* ── TECH STRIP ── */
+    .platforms {
+      display: flex; justify-content: center; align-items: center;
+      gap: 2.5rem; padding: 1.75rem 2rem;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      flex-wrap: wrap; margin: 3rem 0;
+    }
+    .platform-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .platform-list { display: flex; gap: 2.5rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .platform-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.93rem; font-weight: 600; color: var(--text); }
+    .platform-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex; justify-content: center; gap: 4rem;
+      padding: 3rem 2rem; text-align: center;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .stat-num { font-size: 2.8rem; font-weight: 800; color: var(--accent); letter-spacing: -0.04em; line-height: 1; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; }
+
+    /* ── SECTION ── */
+    section { max-width: 1080px; margin: 0 auto; padding: 3.5rem 2rem; }
+    .section-label { font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.6rem; }
+    .section-sub { color: var(--muted); margin-bottom: 2.5rem; max-width: 540px; line-height: 1.65; }
+
+    /* ── CARDS ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.5rem;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+    .card:hover { border-color: var(--accent); box-shadow: 0 0 24px rgba(240,136,62,0.08); transform: translateY(-2px); }
+    .card-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .card p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+    .card-skills { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.9rem; }
+    .skill-chip {
+      font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 4px;
+      background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+    }
+    .card-new {
+      display: inline-block; font-size: 0.62rem; padding: 0.1rem 0.4rem;
+      border-radius: 4px; background: rgba(63,185,80,0.12); color: var(--green);
+      font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      margin-left: 0.4rem; vertical-align: middle;
+    }
+
+    /* ── WHY BANNER ── */
+    .why-banner {
+      background: linear-gradient(135deg, rgba(63,185,80,0.06) 0%, rgba(240,136,62,0.04) 100%);
+      border: 1px solid rgba(63,185,80,0.18);
+      border-radius: 12px; padding: 2.5rem; margin-bottom: 2.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;
+    }
+    .why-item h4 { font-size: 0.9rem; font-weight: 700; color: var(--green); margin-bottom: 0.4rem; }
+    .why-item p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── ARCHITECTURE DIAGRAM ── */
+    .arch-diagram {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.5rem 2rem; overflow-x: auto; margin-bottom: 2rem;
+    }
+    .arch-diagram pre { color: var(--green); font-size: 0.8rem; line-height: 1.7; font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace; }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 0.75rem; }
+    .step {
+      display: flex; gap: 1rem; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.1rem 1.25rem; transition: border-color 0.15s;
+    }
+    .step:hover { border-color: var(--border-hover); }
+    .step-num {
+      min-width: 28px; height: 28px;
+      background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.25);
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: var(--green); font-size: 0.85rem; flex-shrink: 0;
+    }
+    .step h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .step p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+    .step code {
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 3px;
+      padding: 0.05rem 0.3rem; color: var(--green);
+    }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    td:first-child { font-weight: 600; color: var(--text); }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    .check { color: var(--green); }
+    .cross { color: var(--red); }
+    .partial { color: var(--muted); font-size: 0.82rem; }
+    .highlight-row td { background: rgba(63,185,80,0.05); }
+    .highlight-row td:first-child { color: var(--green); }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; color: var(--green); }
+    .star { color: var(--accent); }
+
+    /* ── INSTALL ── */
+    .install-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .install-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.15s; }
+    .install-card:hover { border-color: var(--border-hover); }
+    .install-header { padding: 0.75rem 1rem; font-size: 0.85rem; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+    .install-body { padding: 1rem; }
+    pre {
+      background: var(--bg); border-radius: 6px; padding: 0.9rem;
+      font-size: 0.8rem; overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+      color: var(--green); line-height: 1.65;
+    }
+    .install-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.65rem; line-height: 1.5; }
+
+    /* ── STAR CTA ── */
+    .star-cta {
+      background: linear-gradient(135deg, rgba(63,185,80,0.07) 0%, rgba(240,136,62,0.05) 100%);
+      border: 1px solid rgba(63,185,80,0.18);
+      border-radius: 12px; padding: 3rem 2rem; text-align: center; margin: 0 2rem;
+    }
+    .star-cta h2 { font-size: 1.6rem; margin-bottom: 0.6rem; }
+    .star-cta p { color: var(--muted); font-size: 0.95rem; max-width: 440px; margin: 0 auto 1.75rem; line-height: 1.6; }
+    .star-cta-actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+
+    /* ── AUTHOR ── */
+    .author-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem;
+      display: flex; align-items: flex-start; gap: 1.5rem; max-width: 640px;
+    }
+    .author-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 800; color: #0d1117; flex-shrink: 0;
+    }
+    .author-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .author-role { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.8rem; line-height: 1.5; }
+    .author-links { display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .author-link {
+      font-size: 0.82rem; padding: 0.3rem 0.7rem;
+      border-radius: 5px; border: 1px solid var(--border); color: var(--muted);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .author-link:hover { color: var(--text); border-color: var(--accent); text-decoration: none; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 2rem; font-size: 0.84rem; color: var(--muted); border-top: 1px solid var(--border); margin-top: 3rem; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+    .section-divider { border: none; border-top: 1px solid var(--border); }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2.1rem; }
+      .author-card { flex-direction: column; }
+      .stats { gap: 2rem; }
+      .star-cta { margin: 0 1rem; padding: 2rem 1rem; }
+      .nav-links a:not(.nav-github):not(:last-child) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">LaptopAI<sup>local</sup></span>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#security">Security</a>
+    <a href="#quickstart">Quick start</a>
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent" class="nav-github" target="_blank">
+      &#9733; GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-wrap">
+  <div class="hero">
+    <div class="badge-row">
+      <span class="badge badge-green">Offline-First</span>
+      <span class="badge badge-orange">Apache 2.0</span>
+      <span class="badge badge-blue">Python 3.10+</span>
+      <span class="badge badge-purple">MCP Ready</span>
+    </div>
+    <h1>Your AI, your machine,<br><span>your rules</span></h1>
+    <p class="hero-sub">
+      Fully local autonomous AI agent for laptop management. LangGraph reasoning loop,
+      Ollama local LLM, ChromaDB RAG, MCP server, and a SHA-256 chained audit log.
+      Zero API keys. Zero cloud calls.
+    </p>
+    <div class="btn-row">
+      <a href="https://github.com/sunilgentyala/LaptopAI-Agent" class="btn btn-primary" target="_blank">
+        &#9733;&nbsp; Star on GitHub
+      </a>
+      <a href="#quickstart" class="btn btn-outline">
+        Quick start &darr;
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STRIP -->
+<div class="platforms">
+  <span class="platform-label">Stack</span>
+  <div class="platform-list">
+    <div class="platform-item"><span class="platform-dot" style="background:#f0883e"></span> LangGraph</div>
+    <div class="platform-item"><span class="platform-dot" style="background:#3fb950"></span> Ollama</div>
+    <div class="platform-item"><span class="platform-dot" style="background:#bc8cff"></span> ChromaDB</div>
+    <div class="platform-item"><span class="platform-dot" style="background:#58a6ff"></span> MCP</div>
+    <div class="platform-item"><span class="platform-dot" style="background:#f0883e"></span> sentence-transformers</div>
+    <div class="platform-item"><span class="platform-dot" style="background:#3fb950"></span> psutil</div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div><div class="stat-num">7</div><div class="stat-label">Agent Tools</div></div>
+  <div><div class="stat-num">5</div><div class="stat-label">MCP Tools for Claude</div></div>
+  <div><div class="stat-num">10</div><div class="stat-label">Max Agentic Iterations</div></div>
+  <div><div class="stat-num">0</div><div class="stat-label">API Keys Required</div></div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">What it does</div>
+  <h2>Everything local, nothing leaked</h2>
+  <p class="section-sub">Ask it anything about your machine. It reasons, calls tools, and answers — entirely on your hardware, with every action cryptographically logged.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">&#129504;</div>
+      <h3>LangGraph Reasoning Loop</h3>
+      <p>Multi-step planning with tool use via a LangGraph StateGraph. Up to 10 agentic iterations per query, with a ToolNode for parallel tool dispatch and automatic loop termination.</p>
+      <div class="card-skills">
+        <span class="skill-chip">langgraph-0.2+</span>
+        <span class="skill-chip">stategraph</span>
+        <span class="skill-chip">toolnode</span>
+        <span class="skill-chip">10-iter-max</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#127968;</div>
+      <h3>Ollama Local LLM <span class="card-new">No cloud</span></h3>
+      <p>Default <code style="font-size:0.8rem;color:var(--green)">qwen2.5-coder:7b</code> for high tool-calling accuracy. No internet, no API key, no data ever leaves localhost:11434. Swap models in one line of config.</p>
+      <div class="card-skills">
+        <span class="skill-chip">qwen2.5-coder:7b</span>
+        <span class="skill-chip">llama3.2</span>
+        <span class="skill-chip">mistral:7b</span>
+        <span class="skill-chip">deepseek-r1</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#128218;</div>
+      <h3>ChromaDB RAG Layer</h3>
+      <p>Ingest git repos, configs, logs, and docs. Retrieve relevant context at inference time via cosine similarity over <code style="font-size:0.8rem;color:var(--green)">all-MiniLM-L6-v2</code> embeddings — also running fully locally.</p>
+      <div class="card-skills">
+        <span class="skill-chip">chromadb-0.5+</span>
+        <span class="skill-chip">all-miniLM-L6-v2</span>
+        <span class="skill-chip">512-token chunks</span>
+        <span class="skill-chip">cosine-similarity</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#128268;</div>
+      <h3>MCP Server <span class="card-new">Claude ready</span></h3>
+      <p>Exposes 5 tools to Claude Desktop and Claude Code over stdio transport. One config block and Claude can query your system, repos, and knowledge base from any conversation.</p>
+      <div class="card-skills">
+        <span class="skill-chip">mcp-1.0+</span>
+        <span class="skill-chip">stdio-transport</span>
+        <span class="skill-chip">claude-desktop</span>
+        <span class="skill-chip">claude-code</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#128737;&#65039;</div>
+      <h3>Permission Guard</h3>
+      <p>Every tool call passes through PermissionGuard before execution. Path allowlist, blocked system dirs, command allowlist, manual approval for destructive ops, 100 MB write cap, 30s timeout.</p>
+      <div class="card-skills">
+        <span class="skill-chip">path-allowlist</span>
+        <span class="skill-chip">cmd-allowlist</span>
+        <span class="skill-chip">write-cap-100mb</span>
+        <span class="skill-chip">timeout-30s</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#128279;</div>
+      <h3>SHA-256 Chained Audit Log</h3>
+      <p>Every agent action writes to <code style="font-size:0.8rem;color:var(--green)">logs/audit.jsonl</code> as a hash chain — each entry commits the SHA-256 of the previous entry. Any historical modification is detectable.</p>
+      <div class="card-skills">
+        <span class="skill-chip">sha-256</span>
+        <span class="skill-chip">hash-chain</span>
+        <span class="skill-chip">append-only</span>
+        <span class="skill-chip">verify-audit</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="section-label">Architecture</div>
+  <h2>How the agent thinks</h2>
+  <p class="section-sub">A LangGraph loop ties together a local LLM, a RAG layer, system tools, and an audit trail — all on your machine.</p>
+
+  <div class="why-banner">
+    <div class="why-item">
+      <h4>LangGraph drives the loop</h4>
+      <p>The StateGraph alternates between the agent node (LLM reasoning) and ToolNode (parallel tool dispatch) until the LLM produces a final response or hits the 10-iteration limit.</p>
+    </div>
+    <div class="why-item">
+      <h4>Every call is guarded</h4>
+      <p>PermissionGuard intercepts each tool call before execution. Violations raise PermissionError and are blocked — the LLM never receives the result of a blocked call.</p>
+    </div>
+    <div class="why-item">
+      <h4>Every call is logged</h4>
+      <p>Allowed and blocked calls alike are written to the SHA-256 chained audit log. Run <code>python main.py verify-audit</code> at any time to confirm the full chain is intact.</p>
+    </div>
+    <div class="why-item">
+      <h4>Claude sees the same tools</h4>
+      <p>The MCP server exposes a subset of tools to Claude Desktop and Claude Code via stdio. Claude calls them like any other MCP tool — with every call logged to the same audit trail.</p>
+    </div>
+  </div>
+
+  <div class="arch-diagram">
+    <pre>&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474;                     User / MCP Client                                 &#9474;
+&#9474;                 (CLI chat or Claude Desktop)                          &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                                 | query
+                                 &#9660;
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474;                      LangGraph Agent Loop                             &#9474;
+&#9474;                                                                         &#9474;
+&#9474;   &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;  tool_calls?   &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;                    &#9474;
+&#9474;   &#9474;  agent   &#9474; &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9658; &#9474;   ToolNode     &#9474;                    &#9474;
+&#9474;   &#9474;  (LLM)   &#9474; &#9668;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472; &#9474;  (LangChain)  &#9474;                    &#9474;
+&#9474;   &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;  tool results  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;                    &#9474;
+&#9474;        &#9474;                          &#9474;                                    &#9474;
+&#9474;   max 10 iters              Permission Guard + Audit Log                &#9474;
+&#9474;        &#9474;                                                               &#9474;
+&#9474;        &#9660; Final response                                               &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                 |                   |                        |
+                 &#9660;                   &#9660;                        &#9660;
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488; &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488; &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474; Ollama (localhost) &#9474; &#9474;  ChromaDB (RAG)   &#9474; &#9474;   System Tools    &#9474;
+&#9474;                    &#9474; &#9474;                   &#9474; &#9474;                    &#9474;
+&#9474; qwen2.5-coder:7b   &#9474; &#9474; all-MiniLM-L6-v2  &#9474; &#9474; psutil, git,        &#9474;
+&#9474; temperature=0.1    &#9474; &#9474; cosine similarity  &#9474; &#9474; pathlib, subprocess &#9474;
+&#9474; NO API KEY         &#9474; &#9474; 512-token chunks   &#9474; &#9474; Permission Guard    &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496; &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</pre>
+  </div>
+
+  <div class="section-label" style="margin-bottom:1rem;">Available tools</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Description</th><th>Permission</th><th>MCP</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">get_system_status</span></td><td style="color:var(--muted);font-size:0.85rem;">CPU %, memory %, disk free, battery %, boot time, platform</td><td style="color:var(--muted);font-size:0.82rem;">Read</td><td class="check">&#10003;</td></tr>
+        <tr class="highlight-row"><td><span class="mono">list_gitrepos</span></td><td style="color:var(--muted);font-size:0.85rem;">All repos under C:\Gitrepos with remote URL and current branch</td><td style="color:var(--muted);font-size:0.82rem;">Read</td><td class="check">&#10003;</td></tr>
+        <tr><td><span class="mono">run_git_status</span></td><td style="color:var(--muted);font-size:0.85rem;"><code>git status --short</code> for a named repo</td><td style="color:var(--muted);font-size:0.82rem;">Read (path check)</td><td class="check">&#10003;</td></tr>
+        <tr><td><span class="mono">list_running_processes</span></td><td style="color:var(--muted);font-size:0.85rem;">Top N processes ranked by CPU usage via psutil</td><td style="color:var(--muted);font-size:0.82rem;">Read</td><td class="check">&#10003;</td></tr>
+        <tr><td><span class="mono">read_file</span></td><td style="color:var(--muted);font-size:0.85rem;">Read any text file &le; 2 MB from an allowed path</td><td style="color:var(--muted);font-size:0.82rem;">Read (allowlist)</td><td class="cross">&#10007;</td></tr>
+        <tr><td><span class="mono">write_file</span></td><td style="color:var(--muted);font-size:0.85rem;">Write content to a file in an allowed path</td><td style="color:var(--muted);font-size:0.82rem;">Write (allowlist)</td><td class="cross">&#10007;</td></tr>
+        <tr class="highlight-row"><td><span class="mono">query_knowledge_base</span></td><td style="color:var(--muted);font-size:0.85rem;">Semantic search over ingested documents — top-k cosine hits</td><td style="color:var(--muted);font-size:0.82rem;">Read</td><td class="check">&#10003;</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- SECURITY -->
+<section id="security">
+  <div class="section-label">Security model</div>
+  <h2>Three layers of safe operation</h2>
+  <p class="section-sub">A local agent with file-write access is a high-privilege process. LaptopAI-Agent treats it that way from the ground up.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Permission Guard — every tool call, before execution</h4>
+        <p>
+          <strong>Allowed write paths:</strong> <code>C:\Gitrepos</code>, <code>C:\Users\Sunil\Documents</code>, <code>C:\Users\Sunil\Desktop</code><br>
+          <strong>Blocked paths:</strong> <code>C:\Windows\System32</code>, <code>C:\Program Files</code><br>
+          <strong>Allowed commands:</strong> git, python, pip, npm, node, powershell, Get-ChildItem &hellip;<br>
+          <strong>Manual approval for:</strong> rm, Remove-Item, Format-*, reg delete<br>
+          <strong>Max file write:</strong> 100 MB &nbsp;&bull;&nbsp; <strong>Max execution time:</strong> 30 seconds<br><br>
+          Any violation raises <code>PermissionError</code> and the tool call is blocked — the LLM never sees the result.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>SHA-256 Chained Audit Log — tamper-evident history</h4>
+        <p>
+          Every agent action writes to <code>logs/audit.jsonl</code> as a hash chain. Each entry commits the SHA-256 of the previous entry, making any historical modification immediately detectable. Run <code>python main.py verify-audit</code> to check the full chain integrity at any time.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Zero External Calls — nothing leaves your machine</h4>
+        <p>
+          LLM inference runs via Ollama at <code>localhost:11434</code>. Embeddings run via sentence-transformers locally. Vector store is ChromaDB on disk at <code>./data/chroma_db/</code>. The audit log is a local file. No tokens, queries, files, or embeddings are ever sent over the network.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:2.5rem;margin-bottom:1rem;">Comparison</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Cloud AI (ChatGPT / Claude API)</th>
+          <th>Local LLM (no agent)</th>
+          <th>Cloud LLM + Agent</th>
+          <th>LaptopAI-Agent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td>Runs fully offline</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Zero API keys</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Multi-step tool use</td>
+          <td class="check">&#10003;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr>
+          <td>RAG over local files</td>
+          <td class="cross">&#10007;</td>
+          <td class="cross">&#10007;</td>
+          <td class="partial">partial</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr>
+          <td>MCP integration</td>
+          <td class="partial">partial</td>
+          <td class="cross">&#10007;</td>
+          <td class="partial">partial</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Cryptographic audit trail</td>
+          <td class="cross">&#10007;</td>
+          <td class="cross">&#10007;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003; SHA-256</td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Permission enforcement</td>
+          <td class="cross">&#10007;</td>
+          <td class="cross">&#10007;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+        </tr>
+        <tr>
+          <td>Swap models in config</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+          <td class="cross">&#10007;</td>
+          <td class="check">&#10003;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- QUICK START -->
+<section id="quickstart">
+  <div class="section-label">Installation</div>
+  <h2>Get started in 3 steps</h2>
+  <p class="section-sub">Pull a local model, install dependencies, start chatting. No API key, no signup, no data leaving your machine.</p>
+
+  <div class="install-grid">
+    <div class="install-card">
+      <div class="install-header"><span style="color:#3fb950">&#9679;</span> 1. Pull local model &amp; install</div>
+      <div class="install-body">
+        <pre>ollama pull qwen2.5-coder:7b
+
+git clone https://github.com/\
+  sunilgentyala/LaptopAI-Agent
+cd LaptopAI-Agent
+pip install -r requirements.txt</pre>
+        <div class="install-note">Requires Python 3.10+ and Ollama. qwen2.5-coder:7b (~4.7 GB) is the recommended default.</div>
+      </div>
+    </div>
+
+    <div class="install-card">
+      <div class="install-header"><span style="color:#f0883e">&#9679;</span> 2. Chat &amp; explore</div>
+      <div class="install-body">
+        <pre>python main.py chat
+python main.py status
+python main.py repos
+python main.py verify-audit</pre>
+        <div class="install-note">Ask: "Which of my repos have uncommitted changes?" or "My disk is 87% full — what's taking space in C:\Gitrepos?"</div>
+      </div>
+    </div>
+
+    <div class="install-card">
+      <div class="install-header"><span style="color:#bc8cff">&#9679;</span> 3. Ingest your docs</div>
+      <div class="install-body">
+        <pre>python main.py ingest \
+  C:\Gitrepos
+
+python main.py chat
+&gt; What does the ZKP-RA circuit
+  enforce at the policy layer?</pre>
+        <div class="install-note">Ingests .txt, .md, .log, .py, .yaml, .json recursively with upsert deduplication.</div>
+      </div>
+    </div>
+
+    <div class="install-card">
+      <div class="install-header"><span style="color:#58a6ff">&#9679;</span> 4. Connect Claude Desktop</div>
+      <div class="install-body">
+        <pre>// claude_desktop_config.json
+{
+  "mcpServers": {
+    "laptop-ai": {
+      "command": "python",
+      "args": ["main.py","mcp"],
+      "cwd": "C:\\...\\LaptopAI-Agent"
+    }
+  }
+}</pre>
+        <div class="install-note">Claude can then call system_status, list_gitrepos, git_status, top_processes, and rag_query directly from any conversation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- MODELS -->
+<section>
+  <div class="section-label">Local models</div>
+  <h2>Recommended Ollama models</h2>
+  <p class="section-sub">Swap models with one line in config.yaml — no code changes needed.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Size</th><th>Strength</th></tr></thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><span class="mono">qwen2.5-coder:7b</span> <span class="star">&#11088;</span></td>
+          <td style="color:var(--muted);font-size:0.85rem;">~4.7 GB</td>
+          <td style="color:var(--muted);font-size:0.85rem;">Tool calling, code reasoning — <strong style="color:var(--text)">default</strong></td>
+        </tr>
+        <tr>
+          <td><span class="mono">llama3.2:3b</span></td>
+          <td style="color:var(--muted);font-size:0.85rem;">~2.0 GB</td>
+          <td style="color:var(--muted);font-size:0.85rem;">Lightweight, fast responses</td>
+        </tr>
+        <tr>
+          <td><span class="mono">mistral:7b</span></td>
+          <td style="color:var(--muted);font-size:0.85rem;">~4.1 GB</td>
+          <td style="color:var(--muted);font-size:0.85rem;">General reasoning, instruction following</td>
+        </tr>
+        <tr>
+          <td><span class="mono">deepseek-r1:7b</span></td>
+          <td style="color:var(--muted);font-size:0.85rem;">~4.7 GB</td>
+          <td style="color:var(--muted);font-size:0.85rem;">Multi-step planning, math</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- STAR HISTORY -->
+<section>
+  <div class="section-label">Community</div>
+  <h2>Star history</h2>
+  <p class="section-sub">Track LaptopAI-Agent's growth on GitHub.</p>
+  <a href="https://star-history.com/#sunilgentyala/LaptopAI-Agent&Date" target="_blank">
+    <img
+      src="https://api.star-history.com/svg?repos=sunilgentyala/LaptopAI-Agent&type=Date"
+      alt="Star History Chart"
+      style="width:100%;max-width:720px;border-radius:10px;border:1px solid var(--border);display:block;"
+    >
+  </a>
+</section>
+
+<!-- STAR CTA -->
+<div class="star-cta">
+  <h2>Run AI your way &#11088;</h2>
+  <p>A star helps other developers who want local-first, privacy-respecting AI agents find this project. No cloud required — ever.</p>
+  <div class="star-cta-actions">
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent" class="btn btn-primary" target="_blank">
+      &#9733;&nbsp; Star on GitHub
+    </a>
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent/issues" class="btn btn-outline" target="_blank">
+      Open an issue
+    </a>
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent/blob/master/README.md" class="btn btn-outline" target="_blank">
+      Read the docs
+    </a>
+  </div>
+</div>
+
+<!-- AUTHOR -->
+<section>
+  <div class="section-label">Author</div>
+  <h2>Built by</h2>
+  <div class="author-card">
+    <div class="author-avatar">SG</div>
+    <div>
+      <div class="author-name">Sunil Gentyala</div>
+      <div class="author-role">
+        IEEE Senior Member &nbsp;&middot;&nbsp; Lead Cybersecurity &amp; AI Security Consultant<br>
+        HCL America Inc., Dallas TX &nbsp;&middot;&nbsp; sunil.gentyala@ieee.org
+      </div>
+      <div class="author-links">
+        <a href="https://github.com/sunilgentyala" class="author-link" target="_blank">GitHub</a>
+        <a href="https://sunilgentyala.github.io/argus/" class="author-link" target="_blank">ARGUS</a>
+        <a href="https://sunilgentyala.github.io/OmniRed/" class="author-link" target="_blank">OmniRed</a>
+        <a href="https://sunilgentyala.github.io/ZKP-RA/" class="author-link" target="_blank">ZKP-RA</a>
+        <a href="mailto:sunil.gentyala@ieee.org" class="author-link">IEEE Email</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    LaptopAI-Agent &copy; 2026 <a href="https://github.com/sunilgentyala" target="_blank">Sunil Gentyala</a>,
+    HCL America Inc. &nbsp;&middot;&nbsp;
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent/blob/master/LICENSE" target="_blank">Apache 2.0</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/sunilgentyala/LaptopAI-Agent" target="_blank">GitHub Repository</a>
+  </p>
+  <p style="margin-top:0.4rem">Zero API keys. Zero cloud. Just your machine.</p>
+</footer>
+
+</body>
+</html>
