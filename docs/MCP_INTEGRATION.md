@@ -103,6 +103,16 @@ asyncio.run(run())
    `NotificationOptions()` instance (imported from
    `mcp.server.lowlevel.server`).
 
+3. **`aegis_check_citations`/`aegis_analyze_paper` intermittently returned
+   `"(no output)"`.** `_run_aegis_sync()`'s `subprocess.run()` call didn't
+   set `stdin`, so the child `aegis.exe` process inherited the MCP server's
+   own stdin — which is the live JSON-RPC pipe from Claude Code. A long-running
+   child competing for that same pipe is a race: sometimes it worked,
+   sometimes the result came back empty. Fixed by passing
+   `stdin=subprocess.DEVNULL` so the child never touches the parent's
+   protocol channel. Any subprocess spawned from inside a stdio-transport
+   MCP server must do this.
+
 ## Adding a new MCP tool
 
 1. Add a `types.Tool(...)` entry to `list_tools()` in `src/mcp/server.py`

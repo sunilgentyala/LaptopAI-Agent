@@ -30,6 +30,7 @@ def _run_aegis_sync(args: list[str], timeout: int = 300) -> str:
         [str(AEGIS_EXE)] + args,
         capture_output=True, text=True, timeout=timeout,
         encoding="utf-8", errors="replace", env=env,
+        stdin=subprocess.DEVNULL,
     )
     out = result.stdout.strip()
     if result.returncode != 0 and result.stderr.strip():
