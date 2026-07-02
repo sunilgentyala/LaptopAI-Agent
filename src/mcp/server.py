@@ -2,12 +2,14 @@
 
 import asyncio
 import json
+import os
 import sys
 from typing import Any
 
 import mcp.server.stdio
 import mcp.types as types
 from mcp.server import Server
+from mcp.server.lowlevel.server import NotificationOptions
 from mcp.server.models import InitializationOptions
 
 import psutil
@@ -16,6 +18,23 @@ import subprocess
 
 from src.security.audit import get_audit
 from src.security.permissions import load_guard
+
+AEGIS_EXE = Path(r"C:\Gitrepos\aegis-integrity\.venv\Scripts\aegis.exe")
+AEGIS_INDEX_DIR = Path(r"C:\Gitrepos\aegis-integrity\aegis_index")
+AEGIS_REPORT_DIR = Path(r"C:\Gitrepos\aegis-integrity\aegis_reports")
+
+def _run_aegis_sync(args: list[str], timeout: int = 300) -> str:
+    env = os.environ.copy()
+    env.setdefault("AEGIS_CITATION_EMAIL", "sunil.gentyala@ieee.org")
+    result = subprocess.run(
+        [str(AEGIS_EXE)] + args,
+        capture_output=True, text=True, timeout=timeout,
+        encoding="utf-8", errors="replace", env=env,
+    )
+    out = result.stdout.strip()
+    if result.returncode != 0 and result.stderr.strip():
+        out += "\nSTDERR:\n" + result.stderr.strip()
+    return out or "(no output)"
 
 
 app = Server("laptop-ai-mcp")
@@ -56,6 +75,46 @@ async def list_tools() -> list[types.Tool]:
                 "type": "object",
                 "properties": {"question": {"type": "string"}},
                 "required": ["question"],
+            },
+        ),
+        types.Tool(
+            name="aegis_analyze_paper",
+            description=(
+                "Analyze an academic paper (PDF/DOCX/TEX) with AEGIS v2.0 for plagiarism, "
+                "AI-generated content, citation hallucinations, and stylometric issues. "
+                "Use before IEEE paper submission or when checking paper integrity."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Absolute path to the paper file"},
+                    "skip_ai": {"type": "boolean", "default": False, "description": "Skip GPT-2 AI detection"},
+                    "skip_citations": {"type": "boolean", "default": False, "description": "Skip Crossref lookup"},
+                },
+                "required": ["file_path"],
+            },
+        ),
+        types.Tool(
+            name="aegis_check_citations",
+            description="Verify citation integrity only (fast): hallucinated DOIs, predatory journals, missing DOIs.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {"type": "string", "description": "Absolute path to the paper file"},
+                },
+                "required": ["file_path"],
+            },
+        ),
+        types.Tool(
+            name="aegis_compare_papers",
+            description="Compare two paper files for self-plagiarism or similarity (e.g., conference draft vs journal extension).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file1": {"type": "string"},
+                    "file2": {"type": "string"},
+                },
+                "required": ["file1", "file2"],
             },
         ),
     ]
@@ -120,6 +179,47 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
                   arguments.get("question", "")[:100], f"{len(hits)} hits")
         return [types.TextContent(type="text", text=text)]
 
+    elif name == "aegis_analyze_paper":
+        file_path = arguments["file_path"]
+        stem = Path(file_path).stem
+        AEGIS_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        json_out = str(AEGIS_REPORT_DIR / f"{stem}_report.json")
+        html_out = str(AEGIS_REPORT_DIR / f"{stem}_report.html")
+        args = ["analyze", file_path, "--output", json_out, "--html", html_out,
+                "--index-dir", str(AEGIS_INDEX_DIR)]
+        if arguments.get("skip_ai"):
+            args.append("--no-ai")
+        if arguments.get("skip_citations"):
+            args.append("--no-citations")
+        output = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _run_aegis_sync(args, timeout=300)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "aegis_analyze", file_path[:100], output[:200])
+        return [types.TextContent(type="text", text=output)]
+
+    elif name == "aegis_check_citations":
+        file_path = arguments["file_path"]
+        stem = Path(file_path).stem
+        AEGIS_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        json_out = str(AEGIS_REPORT_DIR / f"{stem}_citations.json")
+        args = ["analyze", file_path,
+                "--no-ai", "--no-semantic", "--no-stylometric", "--no-self-plagiarism",
+                "--output", json_out]
+        output = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _run_aegis_sync(args, timeout=120)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "aegis_citations", file_path[:100], output[:200])
+        return [types.TextContent(type="text", text=output)]
+
+    elif name == "aegis_compare_papers":
+        args = ["compare", arguments["file1"], arguments["file2"]]
+        output = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _run_aegis_sync(args, timeout=300)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "aegis_compare",
+                  f"{arguments['file1'][:50]} vs {arguments['file2'][:50]}", output[:200])
+        return [types.TextContent(type="text", text=output)]
+
     return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
@@ -129,7 +229,7 @@ async def main() -> None:
             server_name="laptop-ai-mcp",
             server_version="1.0.0",
             capabilities=app.get_capabilities(
-                notification_options=None,
+                notification_options=NotificationOptions(),
                 experimental_capabilities={},
             ),
         )

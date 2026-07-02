@@ -10,11 +10,14 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
 class AuditLogger:
     """Append-only audit log with chained hash for tamper detection."""
 
-    def __init__(self, log_path: str = "./logs/audit.jsonl"):
-        self.log_path = Path(log_path)
+    def __init__(self, log_path: str | None = None):
+        self.log_path = Path(log_path) if log_path else REPO_ROOT / "logs" / "audit.jsonl"
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         self._prev_hash = self._read_last_hash()
 
@@ -84,7 +87,7 @@ class AuditLogger:
 _audit: AuditLogger | None = None
 
 
-def get_audit(log_path: str = "./logs/audit.jsonl") -> AuditLogger:
+def get_audit(log_path: str | None = None) -> AuditLogger:
     global _audit
     if _audit is None:
         _audit = AuditLogger(log_path)

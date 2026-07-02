@@ -63,7 +63,11 @@ class PermissionGuard:
             return False
 
 
-def load_guard(config_path: str = "config.yaml") -> PermissionGuard:
-    with open(config_path, encoding="utf-8") as f:
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def load_guard(config_path: str | None = None) -> PermissionGuard:
+    path = Path(config_path) if config_path else REPO_ROOT / "config.yaml"
+    with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     return PermissionGuard(cfg)
