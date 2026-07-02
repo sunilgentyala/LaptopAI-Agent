@@ -228,7 +228,7 @@ async def main() -> None:
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         init_opts = InitializationOptions(
             server_name="laptop-ai-mcp",
-            server_version="1.0.0",
+            server_version="1.1.0",
             capabilities=app.get_capabilities(
                 notification_options=NotificationOptions(),
                 experimental_capabilities={},
