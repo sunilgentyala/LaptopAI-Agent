@@ -336,7 +336,7 @@ ollama pull llama3.2:3b        # lightweight alternative
 
 **Sunil Gentyala**
 Lead Cybersecurity and AI Security Consultant — HCL America Inc., Dallas TX
-IEEE Senior Member No. 101760715 · CISM No. 263076408 · BCS Fellow
+IEEE Senior Member No. 101760715 · CISM No. 263076408 · MBCS · ACM Professional Member · CIISec Affiliate
 
 [![GitHub](https://img.shields.io/badge/GitHub-sunilgentyala-181717?style=flat-square&logo=github)](https://github.com/sunilgentyala)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-sunilgentyala-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/sunilgentyala/)
