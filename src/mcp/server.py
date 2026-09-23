@@ -22,6 +22,7 @@ from src.security.permissions import load_guard
 AEGIS_EXE = Path(r"C:\Gitrepos\aegis-integrity\.venv\Scripts\aegis.exe")
 AEGIS_INDEX_DIR = Path(r"C:\Gitrepos\aegis-integrity\aegis_index")
 AEGIS_REPORT_DIR = Path(r"C:\Gitrepos\aegis-integrity\aegis_reports")
+SIGNALTRIM_REPO = Path(r"C:\Gitrepos\signaltrim")
 
 def _run_aegis_sync(args: list[str], timeout: int = 300) -> str:
     env = os.environ.copy()
@@ -35,6 +36,24 @@ def _run_aegis_sync(args: list[str], timeout: int = 300) -> str:
     out = result.stdout.strip()
     if result.returncode != 0 and result.stderr.strip():
         out += "\nSTDERR:\n" + result.stderr.strip()
+    return out or "(no output)"
+
+
+def _run_signaltrim_sync(args: list[str], timeout: int = 300) -> str:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(SIGNALTRIM_REPO) + os.pathsep + env.get("PYTHONPATH", "")
+    result = subprocess.run(
+        [sys.executable, "-m", "signaltrim"] + args,
+        capture_output=True, text=True, timeout=timeout,
+        encoding="utf-8", errors="replace", env=env, cwd=str(SIGNALTRIM_REPO),
+        stdin=subprocess.DEVNULL,
+    )
+    # SignalTrim prints filtered command output to stdout and its own labeled
+    # "--- signaltrim summary ---" block to stderr (deliberately, so the
+    # summary never pollutes output another tool/agent might parse) —
+    # surface both to the caller as-is.
+    parts = [result.stdout.rstrip("\n"), result.stderr.strip()]
+    out = "\n".join(p for p in parts if p.strip())
     return out or "(no output)"
 
 
@@ -116,6 +135,40 @@ async def list_tools() -> list[types.Tool]:
                     "file2": {"type": "string"},
                 },
                 "required": ["file1", "file2"],
+            },
+        ),
+        types.Tool(
+            name="signaltrim_run",
+            description=(
+                "Run a build/test/install command (npm, python/pytest, go test, docker build, "
+                "terraform) through SignalTrim, which strips noise (progress bars, deprecation "
+                "warnings, repeated lines) from the output while guaranteeing every error-shaped "
+                "line survives untouched. Use to save context on a verbose command whose full raw "
+                "output isn't needed. Only single, non-compound commands are supported (no shell "
+                "pipes/redirects/&&); subject to the same allowed_commands/require_approval_for "
+                "policy as any other command execution."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Argv to run, e.g. [\"npm\", \"install\"] or [\"python\", \"-m\", \"pytest\", \"-v\"]",
+                    },
+                },
+                "required": ["command"],
+            },
+        ),
+        types.Tool(
+            name="signaltrim_report",
+            description="View SignalTrim's run history and token-savings stats (from its persistent SQLite log).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "default": 20, "description": "Number of recent runs to show"},
+                },
+                "required": [],
             },
         ),
     ]
@@ -219,6 +272,30 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         )
         audit.log("MCP_TOOL", "mcp_client", "aegis_compare",
                   f"{arguments['file1'][:50]} vs {arguments['file2'][:50]}", output[:200])
+        return [types.TextContent(type="text", text=output)]
+
+    elif name == "signaltrim_run":
+        command = arguments.get("command") or []
+        if not isinstance(command, list) or not command:
+            return [types.TextContent(type="text", text="'command' must be a non-empty array of argv strings")]
+        joined = " ".join(str(c) for c in command)
+        try:
+            guard.check_command(joined)
+        except Exception as e:
+            audit.log("MCP_TOOL", "mcp_client", "signaltrim_run_denied", joined[:100], str(e))
+            return [types.TextContent(type="text", text=f"Denied: {e}")]
+        output = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _run_signaltrim_sync(command, timeout=guard.max_exec_sec)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "signaltrim_run", joined[:100], output[:200])
+        return [types.TextContent(type="text", text=output)]
+
+    elif name == "signaltrim_report":
+        limit = arguments.get("limit", 20)
+        output = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: _run_signaltrim_sync(["report", "--limit", str(limit)], timeout=30)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "signaltrim_report", str(limit), output[:200])
         return [types.TextContent(type="text", text=output)]
 
     return [types.TextContent(type="text", text=f"Unknown tool: {name}")]

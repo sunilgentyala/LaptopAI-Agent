@@ -123,6 +123,11 @@ Every tool call is intercepted by the **Permission Guard** and written to the **
 | `git_status` | Status for a named repo |
 | `top_processes` | Top 10 processes by CPU |
 | `rag_query` | Semantic search over ingested knowledge base |
+| `aegis_analyze_paper` | Full AEGIS plagiarism/AI-detection/citation scan of a paper file |
+| `aegis_check_citations` | Fast citation-integrity-only scan (hallucinated DOIs, predatory journals) |
+| `aegis_compare_papers` | Compare two paper files for self-plagiarism/similarity |
+| `signaltrim_run` | Run a build/test/install command through [SignalTrim](https://github.com/sunilgentyala/signaltrim), stripping noise from the output while guaranteeing error-shaped lines survive |
+| `signaltrim_report` | View SignalTrim's run history and token-savings stats |
 
 ---
 
