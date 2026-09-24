@@ -344,7 +344,7 @@ Lead Cybersecurity and AI Security Consultant — HCL America Inc., Dallas TX
 IEEE Senior Member No. 101760715 · CISM No. 263076408 · MBCS · ACM Professional Member · CIISec Affiliate
 
 [![GitHub](https://img.shields.io/badge/GitHub-sunilgentyala-181717?style=flat-square&logo=github)](https://github.com/sunilgentyala)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-sunilgentyala-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/sunilgentyala/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-sunilgentyala-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/sunil-gentyala/)
 [![Portfolio](https://img.shields.io/badge/Portfolio-sunilgentyala.github.io-FF6B35?style=flat-square)](https://sunilgentyala.github.io)
 [![IEEE Email](https://img.shields.io/badge/IEEE-sunil.gentyala%40ieee.org-00629B?style=flat-square&logo=ieee)](mailto:sunil.gentyala@ieee.org)
 
