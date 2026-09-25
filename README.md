@@ -350,6 +350,24 @@ IEEE Senior Member No. 101760715 · CISM No. 263076408 · MBCS · ACM Profession
 
 ---
 
+## How to Cite
+
+If you use LaptopAI-Agent in your research, please cite the software:
+
+```bibtex
+@software{gentyala2026laptopai,
+  author    = {Gentyala, Sunil},
+  title     = {LaptopAI-Agent},
+  year      = {2026},
+  version   = {1.1.0},
+  url       = {https://github.com/sunilgentyala/LaptopAI-Agent}
+}
+```
+
+Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub shows it under "Cite this repository".
+
+---
+
 ## 📄 License
 
 Apache 2.0 — See [LICENSE](LICENSE) for details.
