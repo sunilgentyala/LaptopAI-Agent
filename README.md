@@ -398,7 +398,7 @@ If you use LaptopAI-Agent in your research, please cite the software:
   author    = {Gentyala, Sunil},
   title     = {LaptopAI-Agent},
   year      = {2026},
-  version   = {1.1.0},
+  version   = {1.2.0},
   url       = {https://github.com/sunilgentyala/LaptopAI-Agent}
 }
 ```
