@@ -59,6 +59,9 @@ python main.py mcp
 
 # 8. Verify audit log chain integrity
 python main.py verify-audit
+
+# 9. Back up + clear browser history (Chrome/Edge/Brave/Firefox), also runs on a 15-day schedule
+python main.py clean-browser-history --dry-run
 ```
 
 ---
@@ -128,6 +131,42 @@ Every tool call is intercepted by the **Permission Guard** and written to the **
 | `aegis_compare_papers` | Compare two paper files for self-plagiarism/similarity |
 | `signaltrim_run` | Run a build/test/install command through [SignalTrim](https://github.com/sunilgentyala/signaltrim), stripping noise from the output while guaranteeing error-shaped lines survive |
 | `signaltrim_report` | View SignalTrim's run history and token-savings stats |
+| `browser_history_status` | Discover every browser profile with a history DB and whether it's currently running (read-only) |
+| `browser_history_cleanup` | Back up then clear history for every **closed** browser profile (Chrome/Edge/Brave/Firefox); running browsers are skipped, never force-closed; requires `confirm=true` to actually change anything |
+
+---
+
+## 🕶️ Browser History Hygiene
+
+`src/privacy/history_cleaner.py` backs up then clears browsing history for
+every locally installed browser profile (Chrome, Edge, Brave, Firefox),
+and is registered as a Windows Scheduled Task (**"LaptopAI Browser History
+Cleanup"**) that fires every 15 days.
+
+- **Backup before delete, always.** Each closed profile's history DB is
+  snapshotted via SQLite's own backup API into a timestamped folder under
+  `Documents\BrowserHistoryBackups` before any row is touched. Old backup
+  runs are pruned after `retention_days` (default 180).
+- **Never touches a running browser.** Chromium browsers hold their History
+  file under an exclusive SQLite lock the entire time they're open, so any
+  external read attempt fails outright — and a raw file copy could capture a
+  torn mid-write snapshot. Rather than risk that (or force-close your
+  browser), a profile that's currently running is skipped entirely for that
+  cycle and reported as `browser_running`; it gets swept up on the next run.
+- **Firefox keeps its bookmarks.** `places.sqlite` holds history *and*
+  bookmarks in the same tables, so the Firefox path deletes visit rows and
+  un-bookmarked places while preserving bookmarked entries (resetting only
+  their visit stats) — the same scope as Firefox's own "Clear Browsing &
+  Download History".
+
+```bash
+python main.py clean-browser-history --dry-run   # preview only
+python main.py clean-browser-history             # back up + clear now
+```
+
+Manage the schedule with `scripts/register_browser_history_cleanup_task.ps1`
+(re-run to update it) or `schtasks /Delete /TN "LaptopAI Browser History Cleanup" /F`
+to remove it.
 
 ---
 

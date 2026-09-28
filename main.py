@@ -6,6 +6,7 @@ Usage:
   python main.py repos                   - List all git repos
   python main.py ingest <path>           - Ingest documents into RAG
   python main.py verify-audit            - Verify audit log integrity
+  python main.py clean-browser-history   - Back up + clear browser history (Chrome/Edge/Brave/Firefox)
   python main.py mcp                     - Start MCP server (stdio)
 """
 
@@ -137,6 +138,35 @@ def verify_audit():
         console.print(f"[green]Audit log intact:[/] {msg}")
     else:
         console.print(f"[red]AUDIT LOG COMPROMISED:[/] {msg}")
+
+
+@app.command("clean-browser-history")
+def clean_browser_history(
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview only, change nothing"),
+    backup_root: str = typer.Option(None, "--backup-root", help="Where to store backups"),
+    retention_days: int = typer.Option(None, "--retention-days", help="Delete backups older than this (default: config.yaml)"),
+):
+    """Back up then clear history for every closed browser profile (Chrome/Edge/Brave/Firefox)."""
+    from src.privacy.history_cleaner import run as run_cleanup
+
+    result = run_cleanup(dry_run=dry_run, backup_root=backup_root, retention_days=retention_days)
+
+    table = Table(title=f"Browser History Cleanup [{result['run_id']}]" +
+                        (" (dry run)" if dry_run else ""))
+    table.add_column("Browser", style="cyan")
+    table.add_column("Profile", style="cyan")
+    table.add_column("Status", style="green")
+    table.add_column("Backup", style="yellow")
+    for r in result["results"]:
+        status = ("cleared" if r["cleared"] else
+                   r["skipped_reason"] if r["skipped_reason"] else
+                   f"error: {r['error']}" if r["error"] else "backed up only")
+        table.add_row(r["browser"], r["profile"], status, r["backup_path"] or "-")
+    console.print(table)
+    if result["pruned_backups"]:
+        console.print(f"[dim]Pruned {len(result['pruned_backups'])} old backup run(s).[/]")
+    if not result["results"]:
+        console.print("[yellow]No browser profiles found on this machine.[/]")
 
 
 @app.command()

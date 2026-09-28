@@ -51,6 +51,11 @@ security:
     - "reg delete"
   max_execution_time_sec: 30
 
+browser_hygiene:
+  backup_root: "C:\\Users\\Sunil\\Documents\\BrowserHistoryBackups"
+  retention_days: 180          # how long to keep backup snapshots
+  schedule_days: 15            # cadence of the registered Task Scheduler job
+
 monitoring:
   system_check_interval_sec: 300   # 5 minutes
   log_retention_days: 30

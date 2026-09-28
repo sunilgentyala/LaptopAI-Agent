@@ -36,6 +36,8 @@ the interactive CLI, not the MCP tool surface.
 | `aegis_analyze_paper` | Full AEGIS integrity check (plagiarism, AI detection, citations) on a paper file |
 | `aegis_check_citations` | Fast citation-only check (hallucinated DOIs, predatory journals) |
 | `aegis_compare_papers` | Self-plagiarism / similarity check between two paper files |
+| `browser_history_status` | Read-only: discover browser profiles and which are currently running |
+| `browser_history_cleanup` | Back up then clear history for closed browser profiles; `confirm=true` required to change anything |
 
 Every call still passes through `PermissionGuard` and writes to the SHA-256
 chained audit log (`logs/audit.jsonl`), same as the LangGraph CLI agent.

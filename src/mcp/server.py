@@ -18,6 +18,7 @@ import subprocess
 
 from src.security.audit import get_audit
 from src.security.permissions import load_guard
+from src.privacy import history_cleaner
 
 AEGIS_EXE = Path(r"C:\Gitrepos\aegis-integrity\.venv\Scripts\aegis.exe")
 AEGIS_INDEX_DIR = Path(r"C:\Gitrepos\aegis-integrity\aegis_index")
@@ -171,6 +172,45 @@ async def list_tools() -> list[types.Tool]:
                 "required": [],
             },
         ),
+        types.Tool(
+            name="browser_history_status",
+            description=(
+                "Discover every installed browser profile (Chrome, Edge, Brave, Firefox) with a "
+                "history database, and report which are currently running. Read-only — makes no "
+                "changes. Use before browser_history_cleanup to see what would be affected."
+            ),
+            inputSchema={"type": "object", "properties": {}, "required": []},
+        ),
+        types.Tool(
+            name="browser_history_cleanup",
+            description=(
+                "Back up then clear browsing history for every closed browser profile on this "
+                "machine (Chrome, Edge, Brave, Firefox). A backup snapshot of each profile's "
+                "history DB is written under backup_root before anything is deleted. Any browser "
+                "that is currently running is left completely untouched and reported as skipped — "
+                "this tool never closes a running browser. Requires confirm=true to actually make "
+                "changes; otherwise it behaves like browser_history_status plus a preview of what "
+                "would be backed up and cleared."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "confirm": {
+                        "type": "boolean", "default": False,
+                        "description": "Must be true to actually back up and clear. False runs a dry-run preview only.",
+                    },
+                    "backup_root": {
+                        "type": "string",
+                        "description": "Directory to store timestamped backups (default: Documents\\BrowserHistoryBackups)",
+                    },
+                    "retention_days": {
+                        "type": "integer", "default": 180,
+                        "description": "Delete backup snapshots older than this many days after a live run",
+                    },
+                },
+                "required": [],
+            },
+        ),
     ]
 
 
@@ -297,6 +337,40 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextCont
         )
         audit.log("MCP_TOOL", "mcp_client", "signaltrim_report", str(limit), output[:200])
         return [types.TextContent(type="text", text=output)]
+
+    elif name == "browser_history_status":
+        targets = history_cleaner.discover_profiles()
+        rows = []
+        for t in targets:
+            spec = history_cleaner._browser_spec(t.browser_key)
+            rows.append({
+                "browser": t.browser_name,
+                "profile": t.profile_name,
+                "db_path": str(t.db_path),
+                "size_mb": round(t.db_path.stat().st_size / 1e6, 1) if t.db_path.exists() else None,
+                "running": history_cleaner.is_browser_running(spec),
+            })
+        audit.log("MCP_TOOL", "mcp_client", "browser_history_status", "", f"{len(rows)} profiles")
+        return [types.TextContent(type="text", text=json.dumps(rows, indent=2))]
+
+    elif name == "browser_history_cleanup":
+        confirm = bool(arguments.get("confirm", False))
+        backup_root = arguments.get("backup_root")
+        retention_days = arguments.get("retention_days")
+        retention_days = int(retention_days) if retention_days is not None else None
+        if backup_root:
+            try:
+                guard.check_path(backup_root, "write")
+            except Exception as e:
+                audit.log("MCP_TOOL", "mcp_client", "browser_history_cleanup_denied", backup_root, str(e))
+                return [types.TextContent(type="text", text=f"Denied: {e}")]
+        summary = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: history_cleaner.run(dry_run=not confirm, backup_root=backup_root,
+                                                retention_days=retention_days)
+        )
+        audit.log("MCP_TOOL", "mcp_client", "browser_history_cleanup",
+                   backup_root or "(default)", json.dumps(summary)[:300])
+        return [types.TextContent(type="text", text=json.dumps(summary, indent=2))]
 
     return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
